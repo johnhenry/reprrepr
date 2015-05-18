@@ -42,7 +42,9 @@ try{
   render = require(argv['set-render']);
   if(argv.verbose) console.log('loaded local render module:' + args['set-render']);
 }catch(error){
-  render = require('./render');
+  render = function(input, output){
+    return output;
+  };
 }
 //Load environment
 var evaluate;
@@ -59,7 +61,7 @@ try{
     environment = require(argv['set-environment']);
     if(argv.verbose) console.log('loaded local environment module' + args['set-environment']);
   }catch(error){
-    environment = require('./environment');
+    environment = {};
   }
   //Create evaluate function
   var language = argv.language;
@@ -69,9 +71,7 @@ try{
     language = 'localeval';
   var evaluate = require('./evaluator')(
     require(evaluator),
-    environment.environment,
-    environment.inputHistory,
-    environment.outputHistory
+    environment
   );
 }
 
@@ -128,8 +128,6 @@ if(argv.languages){
   return;
 };
 
-
-
 //Create REPL
 var readline = require('readline').createInterface({
   input: process.stdin,
@@ -139,10 +137,8 @@ var readline = require('readline').createInterface({
 readline.setPrompt(argv.propmt || ((language === 'localeval'? '' : language) + '>') );
 readline.on('line', function(line){
   evaluate(line)
-    .then(function(history){
-      console.log(render(
-        environment.inputHistory,
-        environment.outputHistory));
+    .then(function(result){
+      console.log(render(result[0], result[1]));
         readline.prompt(true);
     })
     .catch(function(error){

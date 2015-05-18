@@ -1,25 +1,15 @@
-var evaluate = function(str, evalfunc, environment, inputHistory, outputHistory){
-  var input = str;
+var evaluate = function(input, evalfunc, environment){
   var output;
   try{
     output = evalfunc(input, environment);
   }catch(error){
     output = error.toString();
   }
-  inputHistory.push(input);
-  outputHistory.push(output);
-  return Promise.resolve({
-    inputs:inputHistory,
-    outputs:outputHistory
-  });
+  return Promise.resolve([input, output]);
 };
 
-module.exports = function(evalfunc, environment, inputHistory, outputHistory){
-  evalfunc = evalfunc || eval;
-  environment = environment || {};
-  inputHistory = inputHistory || [];
-  outputHistory = outputHistory || [];
+module.exports = function(evalfunc, environment){
   return function(input){
-    return evaluate(input, evalfunc, environment, inputHistory, outputHistory);
+    return evaluate(input, evalfunc || eval, environment || {});
   };
 }
