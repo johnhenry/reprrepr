@@ -26,12 +26,16 @@ var argv = require('yargs')
 .alias('h', 'help')
 .epilog('copyright 2015')
 .argv;
+process.on('SIGINT', function () {
+  if(argv.verbose) console.log('Exiting');
+  process.exit(0);
+});
 var fs = require('fs');
 //--help flag
 if(argv.help){
   return console.log('help');
 };
-//Create evaluator
+//Load environment
 var environment;
 try{
   environment = require(argv['set-environment']);
@@ -39,6 +43,7 @@ try{
 }catch(error){
   environment = require('./environment');
 }
+//Load renderer
 var render;
 try{
   render = require(argv['set-render']);
@@ -47,34 +52,50 @@ try{
   render = require('./render');
 }
 
+//Create evaluator
 var language = argv.language;
 var evaluatorPath =
   fs.existsSync(__dirname + '/languages/' + language + ".js") ?
   './languages/' + language :
   language = 'localeval';
-
 var evaluator = require('./evaluator')(
   environment.environment,
   require(evaluatorPath),
   environment.inputHistory,
   environment.outputHistory
 );
-//--eval flag
+//--version flag
 if(argv.version){
   return console.log(_package.version);
 };
 //--eval flag
-if(argv.eval){
-  return evaluator.evaluate(argv.eval)
-    .then(function(history){
-      console.log(render(
-        environment.inputHistory,
-        environment.outputHistory));
-        readline.prompt(true);
-    })
+if(argv.eval !== undefined){
+  if(argv.eval === true){
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    return process.stdin.on('data', function(data){
+      return evaluator.evaluate(data)
+        .then(function(history){
+          console.log(render(
+            environment.inputHistory,
+            environment.outputHistory));
+            readline.prompt(true);
+        })
+    });
+  }else{
+    if(argv.verbose) console.log('Evaluating String: ' + argv.eval);
+    return evaluator.evaluate(argv.eval)
+      .then(function(history){
+        console.log(render(
+          environment.inputHistory,
+          environment.outputHistory));
+          readline.prompt(true);
+      })
+  }
 };
 //--file flag
 if(argv.file){
+  if(argv.verbose) console.log('Evaluating File: ' + argv.file);
   return evaluator.evaluate(fs.readFileSync(argv.file))
     .then(function(history){
       console.log(render(
@@ -96,6 +117,8 @@ if(argv.languages){
   return;
 };
 
+
+
 //Create REPL
 var readline = require('readline').createInterface({
   input: process.stdin,
@@ -116,5 +139,4 @@ readline.on('line', function(line){
         readline.prompt(true);
     });
 });
-
 readline.prompt(true);

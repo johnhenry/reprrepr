@@ -17,7 +17,21 @@
 
 #Read Evaluate Print Repeat
 
-A REPL for Multiple Languages
+A Javascript REPL
+
+##Features
+
+###Multiple Languages
+ reprrepr currently supports the folowing languages:
+  - Javascript (Default)
+  - [Lisypscript](http://lispyscript.com/)
+  - [ECMASscript 6 (via babel.js)](https://babeljs.io/)
+
+###Isolated Environment
+  reprrepr executes in an isolated environment with most top level objects stripped out. You may define your own custom environment using the --environment flag (see below for more);
+
+###Custom Rendering
+  reprrepr needn't simply render to the console. Define your own custom rendere wit the --render flag (see below for more);
 
 ##Installation
 
@@ -86,6 +100,35 @@ module.exports = {
 repr --set-render render.js
 ```
 The render module should export an object similar to the following:
+
+```js
+module.exports = function(inputHistory, outputHistory){
+  return outputHistory[outputHistory.length - 1];
+};
+
+```
+
+###Flags can be mixed and matched (where it makes sense)
+```bash
+repr --language es6 \
+--set-environment environment.js\
+--no-verbose \
+--file input.es6.js > output.js
+```
+Note: render and environment modules must be written in Javascript, even if the REPL's language is set to something different
+
+```js
+module.exports = function(inputHistory, outputHistory){
+  return outputHistory[outputHistory.length - 1];
+};
+
+```
+
+###Pipe text to repr using the --eval flag
+```bash
+echo '(+ 1 1)' | repr --language lispyscript --eval
+```
+Note: render and environment modules must be written in Javascript, even if the REPL's language is set to something different
 
 ```js
 module.exports = function(inputHistory, outputHistory){
