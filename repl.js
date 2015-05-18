@@ -35,14 +35,7 @@ var fs = require('fs');
 if(argv.help){
   return console.log('help');
 };
-//Load environment
-var environment;
-try{
-  environment = require(argv['set-environment']);
-  if(argv.verbose) console.log('loaded local environment module' + args['set-environment']);
-}catch(error){
-  environment = require('./environment');
-}
+
 //Load renderer
 var render;
 try{
@@ -51,19 +44,37 @@ try{
 }catch(error){
   render = require('./render');
 }
+//Load environment
+var evaluate;
+var language;
+try{
+  evalutate = require(argv['set-evaluator']);
+  if(argv.verbose) console.log('loaded local evaluator' + args['set-evaluator']);
+  language = '?';
+}catch(e){
+  //Load environment
+  language = argv.language;
+  var environment;
+  try{
+    environment = require(argv['set-environment']);
+    if(argv.verbose) console.log('loaded local environment module' + args['set-environment']);
+  }catch(error){
+    environment = require('./environment');
+  }
+  //Create evaluate function
+  var language = argv.language;
+  var evaluator =
+    fs.existsSync(__dirname + '/languages/' + language + ".js") ?
+    './languages/' + language :
+    language = 'localeval';
+  var evaluate = require('./evaluator')(
+    require(evaluator),
+    environment.environment,
+    environment.inputHistory,
+    environment.outputHistory
+  );
+}
 
-//Create evaluator
-var language = argv.language;
-var evaluatorPath =
-  fs.existsSync(__dirname + '/languages/' + language + ".js") ?
-  './languages/' + language :
-  language = 'localeval';
-var evaluator = require('./evaluator')(
-  environment.environment,
-  require(evaluatorPath),
-  environment.inputHistory,
-  environment.outputHistory
-);
 //--version flag
 if(argv.version){
   return console.log(_package.version);
@@ -74,7 +85,7 @@ if(argv.eval !== undefined){
     process.stdin.resume();
     process.stdin.setEncoding('utf8');
     return process.stdin.on('data', function(data){
-      return evaluator.evaluate(data)
+      return evaluate(data)
         .then(function(history){
           console.log(render(
             environment.inputHistory,
@@ -84,7 +95,7 @@ if(argv.eval !== undefined){
     });
   }else{
     if(argv.verbose) console.log('Evaluating String: ' + argv.eval);
-    return evaluator.evaluate(argv.eval)
+    return evaluate(argv.eval)
       .then(function(history){
         console.log(render(
           environment.inputHistory,
@@ -96,7 +107,7 @@ if(argv.eval !== undefined){
 //--file flag
 if(argv.file){
   if(argv.verbose) console.log('Evaluating File: ' + argv.file);
-  return evaluator.evaluate(fs.readFileSync(argv.file))
+  return evaluate(fs.readFileSync(argv.file))
     .then(function(history){
       console.log(render(
         environment.inputHistory,
@@ -127,7 +138,7 @@ var readline = require('readline').createInterface({
 });
 readline.setPrompt(argv.propmt || ((language === 'localeval'? '' : language) + '>') );
 readline.on('line', function(line){
-  evaluator.evaluate(line)
+  evaluate(line)
     .then(function(history){
       console.log(render(
         environment.inputHistory,
