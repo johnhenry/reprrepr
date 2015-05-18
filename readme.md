@@ -66,3 +66,30 @@ repr --file javascript.js
 ```bash
 repr --file --language lispyscript lispyscript.lsjs
 ```
+
+###Open a REPL with specified environment module
+```bash
+repr --set-environment environment.js
+```
+The environment module should export an object similar to the following:
+
+```js
+module.exports = {
+  environment:{},/*Execution environment object*/
+  inputHistory:[],/*Array for inputs*/
+  outputHistory:[]/*Array for outputs*/
+}
+```
+
+###Open a REPL with specified render module
+```bash
+repr --set-render render.js
+```
+The render module should export an object similar to the following:
+
+```js
+module.exports = function(inputHistory, outputHistory){
+  return outputHistory[outputHistory.length - 1];
+};
+
+```
