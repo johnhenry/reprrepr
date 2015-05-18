@@ -14,6 +14,7 @@
 ###EVALUATE
 ###PRINT
 ###REPEAT
+###...
 
 #Read Evaluate Print Repeat
 
@@ -22,16 +23,16 @@ A Javascript REPL
 ##Features
 
 ###Multiple Languages
- reprrepr currently supports the folowing languages:
+ reprrepr currently supports the folowing languages through use of the __--language__ flag:
   - Javascript (Default)
   - [Lisypscript](http://lispyscript.com/)
   - [ECMASscript 6 (via babel.js)](https://babeljs.io/)
 
 ###Isolated Environment
-  reprrepr executes in an isolated environment with most top level objects stripped out. You may define your own custom environment using the --environment flag (see below for more);
+  reprrepr executes in an isolated environment with most top level objects stripped out. You may define your own custom environment using the __--environment__ flag (see below for more);
 
 ###Custom Rendering
-  reprrepr needn't simply render to the console. Define your own custom rendere wit the --render flag (see below for more);
+  reprrepr needn't simply render to the console. Define your own custom rendere wit the __--render__ flag (see below for more);
 
 ##Installation
 
@@ -66,9 +67,9 @@ repr --languages
 repr --eval "1 + 1;"
 
 ```
-###Evaluate Lispyscript inline
+###Evaluate piped Lispyscript using an empty --eval flag
 ```bash
-repr --language lispyscript --eval "(+ 1 1)"
+echo "(+ 1 1)" | repr --language lispyscript --eval
 ```
 
 ###Evaluate A Javascript file
@@ -80,6 +81,8 @@ repr --file javascript.js
 ```bash
 repr --file --language lispyscript lispyscript.lsjs
 ```
+
+
 
 ###Open a REPL with specified environment module
 ```bash
@@ -116,23 +119,3 @@ repr --language es6 \
 --file input.es6.js > output.js
 ```
 Note: render and environment modules must be written in Javascript, even if the REPL's language is set to something different
-
-```js
-module.exports = function(inputHistory, outputHistory){
-  return outputHistory[outputHistory.length - 1];
-};
-
-```
-
-###Pipe text to repr using the --eval flag
-```bash
-echo '(+ 1 1)' | repr --language lispyscript --eval
-```
-Note: render and environment modules must be written in Javascript, even if the REPL's language is set to something different
-
-```js
-module.exports = function(inputHistory, outputHistory){
-  return outputHistory[outputHistory.length - 1];
-};
-
-```
