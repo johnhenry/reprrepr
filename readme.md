@@ -82,8 +82,6 @@ repr --file javascript.js
 repr --file --language lispyscript lispyscript.lsjs
 ```
 
-
-
 ###Open a REPL with specified environment module
 ```bash
 repr --set-environment environment.js
@@ -92,9 +90,7 @@ The environment module should export an object similar to the following:
 
 ```js
 module.exports = {
-  environment:{},/*Execution environment object*/
-  inputHistory:[],/*Array for inputs*/
-  outputHistory:[]/*Array for outputs*/
+  Math : Math
 }
 ```
 
@@ -108,7 +104,6 @@ The render module should export an object similar to the following:
 module.exports = function(inputHistory, outputHistory){
   return outputHistory[outputHistory.length - 1];
 };
-
 ```
 
 ###Set the function used to evaluate

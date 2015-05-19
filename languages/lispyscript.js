@@ -1,2 +1,2 @@
-module.exports = require('../localtransform')
+module.exports = require('../lib/localtransform')
 (require('lispyscript')._compile);

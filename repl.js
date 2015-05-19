@@ -7,7 +7,7 @@ var argv = require('yargs')
 .boolean('version')
 .describe('verbose', 'display verbose output')
 .boolean('verbose')
-.default('verbose', true)
+.default('verbose', false)
 .describe('eval', 'evalutate a give string')
 .example('$0 --eval \'1+1\' ', 'evaluate a given string')
 .alias('e', 'eval')
@@ -22,15 +22,36 @@ var argv = require('yargs')
 .example('$0 --language lispyscript ', 'set language to lispyscript')
 .alias('l', 'language')
 .describe('languages', 'view available languages')
+.describe('host', 'host a socket server repl')
+.example('$0 --host 8080', 'host socker server at port 8080')
 .help('h')
 .alias('h', 'help')
 .epilog('copyright 2015')
 .argv;
+var fs = require('fs');
+var settings;
+try{
+  settings = JSON.parse(fs.readFileSync(process.cwd()+'/.reprrc',{encoding:'utf8'}));
+  if(settings.verbose || (argv.verbose && !settings.verbose) ) console.log('settings loaded from .reprrc');
+}catch(error){
+  settings = {};
+}
+
+argv['set-environment'] = settings['environment'] || argv['set-environment'];
+argv['set-render'] = settings['render'] || argv['set-render'];
+argv['set-evaluator'] = settings['evaluator'] || argv['set-evaluator'];
+argv['file'] = settings['file'] || argv['file'];
+argv['eval'] = settings['eval'] || argv['eval'];
+argv['language'] = settings['language'] || argv['language'];
+argv['verbose'] = settings['verbose'] || argv['verbose'];
+argv['host'] = settings['host'] || argv['host'];
+
+
 process.on('SIGINT', function () {
   if(argv.verbose) console.log('Exiting');
   process.exit(0);
 });
-var fs = require('fs');
+
 //--help flag
 if(argv.help){
   return console.log('help');
@@ -39,9 +60,10 @@ if(argv.help){
 //Load renderer
 var render;
 try{
-  render = require(argv['set-render']);
-  if(argv.verbose) console.log('loaded local render module:' + args['set-render']);
+  render = require(process.cwd() + '/' + argv['set-render']);
+  if(argv.verbose) console.log('Loaded local render module: ' + argv['set-render']);
 }catch(error){
+  if(argv.verbose) console.log('Using default render function');
   render = function(input, output){
     return output;
   };
@@ -50,17 +72,19 @@ try{
 var evaluate;
 var language;
 try{
-  evalutate = require(argv['set-evaluator']);
-  if(argv.verbose) console.log('loaded local evaluator' + args['set-evaluator']);
+  evalutate = require(process.cwd() + '/' + argv['set-evaluator']);
   language = '?';
+  if(argv.verbose) console.log('Loaded evaluator module: ' + argv['set-evaluator']);
 }catch(e){
+  if(argv.verbose) console.log('Using default evaluator');
   //Load environment
   language = argv.language;
   var environment;
   try{
-    environment = require(argv['set-environment']);
-    if(argv.verbose) console.log('loaded local environment module' + args['set-environment']);
+    environment = require(process.cwd() + '/' + argv['set-environment']);
+    if(argv.verbose) console.log('Loaded local environment module: ' + argv['set-environment']);
   }catch(error){
+    if(argv.verbose) console.log('Using default empty environment');
     environment = {};
   }
   //Create evaluate function
@@ -69,8 +93,23 @@ try{
     fs.existsSync(__dirname + '/languages/' + language + '.js') ?
     './languages/' + language :
     language = 'localeval';
-  var evaluate = require('./evaluator')(
-    require(evaluator),
+  var evalfunc = require(evaluator);
+  var evaluate = (
+    function(evalfunc, environment){
+      var e = function(input, evalfunc, environment){
+        var output;
+        try{
+          output = evalfunc(input, environment);
+        }catch(error){
+          output = error.toString();
+        }
+        return Promise.resolve([input, output]);
+      };
+      return function(input){
+        return e(input, evalfunc, environment);
+      };
+    })(
+    evalfunc,
     environment
   );
 }
@@ -148,7 +187,6 @@ if(argv.host){
         return;
       }
       busy = true;
-
       evaluate(input)
         .then(function(result){
           busy = false;
