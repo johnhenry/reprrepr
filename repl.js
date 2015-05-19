@@ -125,21 +125,15 @@ if(argv.eval !== undefined){
     process.stdin.setEncoding('utf8');
     return process.stdin.on('data', function(data){
       return evaluate(data)
-        .then(function(history){
-          console.log(render(
-            environment.inputHistory,
-            environment.outputHistory));
-            readline.prompt(true);
+        .then(function(result){
+          console.log(render(result[0], result[1]));
         })
     });
   }else{
     if(argv.verbose) console.log('Evaluating String: ' + argv.eval);
     return evaluate(argv.eval)
-      .then(function(history){
-        console.log(render(
-          environment.inputHistory,
-          environment.outputHistory));
-          readline.prompt(true);
+      .then(function(result){
+        console.log(render(result[0], result[1]));
       })
   }
 };
@@ -147,11 +141,8 @@ if(argv.eval !== undefined){
 if(argv.file){
   if(argv.verbose) console.log('Evaluating File: ' + argv.file);
   return evaluate(fs.readFileSync(argv.file))
-    .then(function(history){
-      console.log(render(
-        environment.inputHistory,
-        environment.outputHistory));
-        readline.prompt(true);
+    .then(function(result){
+      console.log(render(result[0], result[1]));
     })
 };
 //--languages flag
