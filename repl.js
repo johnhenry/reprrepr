@@ -9,7 +9,7 @@ var argv = require('yargs')
 .boolean('verbose')
 .default('verbose', true)
 .describe('eval', 'evalutate a give string')
-.example('$0 --eval "1+1" ', 'evaluate a given string')
+.example('$0 --eval \'1+1\' ', 'evaluate a given string')
 .alias('e', 'eval')
 .describe('file', 'evalutate a give file')
 .example('$0 --file foo.js ', 'evaluate a given file')
@@ -66,7 +66,7 @@ try{
   //Create evaluate function
   var language = argv.language;
   var evaluator =
-    fs.existsSync(__dirname + '/languages/' + language + ".js") ?
+    fs.existsSync(__dirname + '/languages/' + language + '.js') ?
     './languages/' + language :
     language = 'localeval';
   var evaluate = require('./evaluator')(
@@ -74,7 +74,7 @@ try{
     environment
   );
 }
-
+language = language === 'localeval' ? '' : language;
 //--version flag
 if(argv.version){
   return console.log(_package.version);
@@ -118,7 +118,7 @@ if(argv.file){
 //--languages flag
 if(argv.languages){
   console.log('Languages');
-  fs.readdirSync(__dirname + "/languages")
+  fs.readdirSync(__dirname + '/languages')
   .map(function(language){
     return language.substring(0, language.length - 3)
   })
@@ -127,6 +127,63 @@ if(argv.languages){
   });
   return;
 };
+//--host flag
+if(argv.host){
+  var port = argv.host === true? '8080' : argv.host;
+  var hat = require('hat');
+  var sockets = new Set();
+  var express = require('express');
+  var app = express();
+  app.use(require('serve-index')(process.cwd()));
+  app.use(express.static(process.cwd()));
+  var busy;
+  var socketFunction = function(socket){
+    var id = hat(32,16);
+    socket.send('id: ' + id + (language? ', language: ' + language : ''));
+    sockets.add(socket);
+    if(argv.verbose) console.log('sockets connected: ' + sockets.size);
+    socket.on('message', function(input){
+      if(busy){
+        socket.send('busy');
+        return;
+      }
+      busy = true;
+
+      evaluate(input)
+        .then(function(result){
+          busy = false;
+          if(argv.verbose){
+            console.log(language +'['+id+']>'+result[0]);
+            console.log(result[1]);
+          };
+          sockets.forEach(function(socket){
+            socket.send(JSON.stringify(result.concat(id)));
+          });
+        })
+        .catch(function(error){
+          socket.send(error.toString());
+        });
+      });
+    socket.on('error', function(error){
+      if(argv.verbose) console.log('socket error: ' + error);
+      socket.close();
+      sockets.delete(socket);
+      if(argv.verbose) console.log('sockets connected: ' + sockets.size);
+    });
+    socket.on('close', function(reason){
+      if(argv.verbose) console.log('socket closed: ' + reason);
+      sockets.delete(socket);
+      if(argv.verbose) console.log('sockets connected: ' + sockets.size);
+    });
+  }
+  var server = app.listen(port, function(){
+    if(argv.verbose) console.log('listening on port: ' + port);
+    var ws = require('ws').Server;
+    var wss = new ws({server:server});
+    wss.on('connection', socketFunction);
+  })
+  return;
+}
 
 //Create REPL
 var readline = require('readline').createInterface({
@@ -134,7 +191,7 @@ var readline = require('readline').createInterface({
   output: process.stdout,
   terminal: true
 });
-readline.setPrompt(argv.propmt || ((language === 'localeval'? '' : language) + '>') );
+readline.setPrompt(argv.propmt || (language + '>') );
 readline.on('line', function(line){
   evaluate(line)
     .then(function(result){

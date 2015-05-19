@@ -111,6 +111,32 @@ module.exports = function(inputHistory, outputHistory){
 
 ```
 
+###Set the function used to evaluate
+```bash
+repr --set-evaluator evaluator.js
+```
+The evaluator module should export a function similar to the following:
+
+```js
+module.exports = function(input){
+  return Promise.resolve([input, eval(input)]);
+}
+```
+It should take an input and return a promise resolved an array of length 2;
+  the first value must be the original input,
+  the second value must be the evaluated input.
+
+Note: Setting the evaluator will override the language settings
+but not the renderer settings.
+
+###Host a server at 127.0.0.1:8080
+```bash
+repr --host 8080
+```
+Multiple parties can connect to this server and send input over a socket.
+Output will be distributed to all connected parties.
+
+
 ###Flags can be mixed and matched (where it makes sense)
 ```bash
 repr --language es6 \

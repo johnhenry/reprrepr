@@ -24,8 +24,11 @@
   "dependencies": {
     "babel-core": "^5.4.3",
     "coffee-script": "^1.9.2",
+    "hat": "0.0.3",
     "lispyscript": "^0.3.6",
     "localeval": "^15.2.3",
+    "serve-index": "^1.6.4",
+    "ws": "^0.7.2",
     "yargs": "^3.9.0"
   }
 }
