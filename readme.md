@@ -6,10 +6,6 @@
 ###EVALUATE
 ###PRINT
 ###REPEAT
-###READ
-###EVALUATE
-###PRINT
-###REPEAT
 
 #Read Evaluate Print Repeat
 
@@ -148,21 +144,31 @@ You can define a __.reprrc__ file with pre-defined settings.
 ```json
 {
   "verbose"     : true,
+  "render"      : "render.js",
+  "language"    : "lispyscript",
   "environment" : "environment.js",
-  "render"      : "render.js",
   "evaluator"   : "evaluator.js",
-  "render"      : "render.js",
-  "host"        : 8080,
-  "language"    : "lispyscript"
+  "host"        : 8080
 }
 ```
 Note: the __.reprrc__ is a json file.
+
+The following properties are available in the __.reprrc__ file:
+
+  - verbose -- similar to  __--verbose__ flag
+  - render -- similar to  __--set-render__ flag
+  - language -- similar to  __--language__ flag
+  - environment -- similar to  __--set-enviornmet__ flag
+  - evaluator -- similar to  __--set-evaluator__ flag
+  - host -- similar to  __--host__ flag
+  - eval -- similar to  __--eval__ flag
+  - execute -- code to execute before starting repl
 
 ##Advanced Usage Examples
 
 ###Access history from within your repl
 
-1. Set up a module that exports a history array.
+ - 1 - Set up a module that exports a history array.
 
 ####history.js
 ```javascript
@@ -170,7 +176,7 @@ var history = [];
 module.exports = history;
 ```
 
-2. Create an renderer that adds inputs to the history array.
+ - 2 - Create an renderer that adds inputs to the history array.
 
 ####render.js
 ```javascript
@@ -183,8 +189,10 @@ var render = function(input, output){
 module.exports = render;
 ```
 
-3. Create an environment with functions to access history
+ - 3 - Create an environment with functions to access history
+
 ####environment.js
+
 ```javascript
 var history = require('./history');
 var environment = {
@@ -192,12 +200,12 @@ var environment = {
     return history[2 * index];
   },
   output:function(index){
-    return history[2 * index + 1]
+    return history[2 * index + 1];
   },
   history:history
 }
 ```
-4. Run with custom Flags
+ - 4 - Run with custom Flags
 
 ```
 repl --set-environment environment.js --set-render render.js
@@ -215,7 +223,9 @@ output(0);
 Note : Be careful when your repl leaks into its outer environment like this.
 It may lead to unintended side effects.
 
-You can also set these in an __.reprrc__ file
+ - 5 - You could also set these in a __.reprrc__ file like so:
+
+####.npmrc
 
 ```json
 {

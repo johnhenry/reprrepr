@@ -166,79 +166,88 @@ if(argv.languages){
   });
   return;
 };
-//--host flag
-if(argv.host){
-  var port = argv.host === true? '8080' : argv.host;
-  var hat = require('hat');
-  var sockets = new Set();
-  var express = require('express');
-  var app = express();
-  app.use(require('serve-index')(process.cwd()));
-  app.use(express.static(process.cwd()));
-  var busy;
-  var socketFunction = function(socket){
-    var id = hat(32,16);
-    socket.send('id: ' + id + (language? ', language: ' + language : ''));
-    sockets.add(socket);
-    if(argv.verbose) console.log('sockets connected: ' + sockets.size);
-    socket.on('message', function(input){
-      if(busy){
-        socket.send('busy');
-        return;
-      }
-      busy = true;
-      evaluate(input)
-        .then(function(result){
-          busy = false;
-          if(argv.verbose){
-            console.log(language +'['+id+']> '+result[0]);
-            console.log(result[1]);
-          };
-          sockets.forEach(function(socket){
-            socket.send(JSON.stringify(result.concat(id)));
-          });
-        })
-        .catch(function(error){
-          socket.send(error.toString());
-        });
-      });
-    socket.on('error', function(error){
-      if(argv.verbose) console.log('socket error: ' + error);
-      socket.close();
-      sockets.delete(socket);
-      if(argv.verbose) console.log('sockets connected: ' + sockets.size);
-    });
-    socket.on('close', function(reason){
-      if(argv.verbose) console.log('socket closed: ' + reason);
-      sockets.delete(socket);
-      if(argv.verbose) console.log('sockets connected: ' + sockets.size);
-    });
-  }
-  var server = app.listen(port, function(){
-    if(argv.verbose) console.log('listening on port: ' + port);
-    var ws = require('ws').Server;
-    var wss = new ws({server:server});
-    wss.on('connection', socketFunction);
-  })
-  return;
-}
 
-//Create REPL
-var readline = require('readline').createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: true
-});
-readline.setPrompt(argv.propmt || (language + '> ') );
-readline.on('line', function(line){
-  evaluate(line)
-    .then(function(result){
-      console.log(render(result[0], result[1]));
-        readline.prompt(true);
+
+var application = function(){
+  //--host flag
+  if(argv.host){
+    var port = argv.host === true? '8080' : argv.host;
+    var hat = require('hat');
+    var sockets = new Set();
+    var express = require('express');
+    var app = express();
+    app.use(require('serve-index')(process.cwd()));
+    app.use(express.static(process.cwd()));
+    var busy;
+    var socketFunction = function(socket){
+      var id = hat(32,16);
+      socket.send('id: ' + id + (language? ', language: ' + language : ''));
+      sockets.add(socket);
+      if(argv.verbose) console.log('sockets connected: ' + sockets.size);
+      socket.on('message', function(input){
+        if(busy){
+          socket.send('busy');
+          return;
+        }
+        busy = true;
+        evaluate(input)
+          .then(function(result){
+            busy = false;
+            if(argv.verbose){
+              console.log(language +'['+id+']> '+result[0]);
+              console.log(result[1]);
+            };
+            sockets.forEach(function(socket){
+              socket.send(JSON.stringify(result.concat(id)));
+            });
+          })
+          .catch(function(error){
+            socket.send(error.toString());
+          });
+        });
+      socket.on('error', function(error){
+        if(argv.verbose) console.log('socket error: ' + error);
+        socket.close();
+        sockets.delete(socket);
+        if(argv.verbose) console.log('sockets connected: ' + sockets.size);
+      });
+      socket.on('close', function(reason){
+        if(argv.verbose) console.log('socket closed: ' + reason);
+        sockets.delete(socket);
+        if(argv.verbose) console.log('sockets connected: ' + sockets.size);
+      });
+    }
+    var server = app.listen(port, function(){
+      if(argv.verbose) console.log('listening on port: ' + port);
+      var ws = require('ws').Server;
+      var wss = new ws({server:server});
+      wss.on('connection', socketFunction);
     })
-    .catch(function(error){
-        console.log(error.toString());
-        readline.prompt(true);
-    });
-});
-readline.prompt(true);
+    return;
+  }
+
+  //Create REPL
+  var readline = require('readline').createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: true
+  });
+  readline.setPrompt(argv.propmt || (language + '> ') );
+  readline.on('line', function(line){
+    evaluate(line)
+      .then(function(result){
+        console.log(render(result[0], result[1]));
+          readline.prompt(true);
+      })
+      .catch(function(error){
+          console.log(error.toString());
+          readline.prompt(true);
+      });
+  });
+  readline.prompt(true);
+}
+if(settings['execute']){
+  evaluate(settings['execute']).then(application);
+}else{
+  application();
+}
