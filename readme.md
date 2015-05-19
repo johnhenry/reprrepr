@@ -10,15 +10,10 @@
 ###EVALUATE
 ###PRINT
 ###REPEAT
-###READ
-###EVALUATE
-###PRINT
-###REPEAT
-###...
 
 #Read Evaluate Print Repeat
 
-A Javascript REPL
+A Javascript REPL with a customizable environment
 
 ##Features
 
@@ -29,10 +24,16 @@ A Javascript REPL
   - [ECMASscript 6 (via babel.js)](https://babeljs.io/)
 
 ###Isolated Environment
-  reprrepr executes in an isolated environment with most top level objects stripped out. You may define your own custom environment using the __--environment__ flag (see below for more);
+  __reprrepr__ executes in an isolated environment with most top level objects stripped out. You may define your own custom environment using the __--set-environment__ flag (see below for more).
 
 ###Custom Rendering
-  reprrepr needn't simply render to the console. Define your own custom rendere wit the __--render__ flag (see below for more);
+  __reprrepr__ needn't simply render to the console. Define your own custom render function with the __--set-render__ flag (see below for more).
+
+###Custom Evaluation
+  __reprrepr__ isn't limited to simply evaluating the built in languages. Define your own evaluator using the __--set-evaluator__ flag (see below for more).
+
+###Web Socket REPL
+  __reprrepr__ can host a repl using the __--host__ flag (see below for more).
 
 ##Installation
 
@@ -140,3 +141,91 @@ repr --language es6 \
 --file input.es6.js > output.js
 ```
 Note: render and environment modules must be written in Javascript, even if the REPL's language is set to something different
+
+##.reprrc
+You can define a __.reprrc__ file with pre-defined settings.
+
+```json
+{
+  "verbose"     : true,
+  "environment" : "environment.js",
+  "render"      : "render.js",
+  "evaluator"   : "evaluator.js",
+  "render"      : "render.js",
+  "host"        : 8080,
+  "language"    : "lispyscript"
+}
+```
+Note: the __.reprrc__ is a json file.
+
+##Advanced Usage Examples
+
+###Access history from within your repl
+
+1. Set up a module that exports a history array.
+
+####history.js
+```javascript
+var history = [];
+module.exports = history;
+```
+
+2. Create an renderer that adds inputs to the history array.
+
+####render.js
+```javascript
+var history = require('./history');
+var render = function(input, output){
+  history.push(input);
+  history.push(output);
+  return output;
+};
+module.exports = render;
+```
+
+3. Create an environment with functions to access history
+####environment.js
+```javascript
+var history = require('./history');
+var environment = {
+  input:function(index){
+    return history[2 * index];
+  },
+  output:function(index){
+    return history[2 * index + 1]
+  },
+  history:history
+}
+```
+4. Run with custom Flags
+
+```
+repl --set-environment environment.js --set-render render.js
+> 1 + 1
+2
+> 3 + 2
+5
+> output(0);
+2
+> input(1)
+3 + 2
+> history[4]
+output(0);
+```
+Note : Be careful when your repl leaks into its outer environment like this.
+It may lead to unintended side effects.
+
+You can also set these in an __.reprrc__ file
+
+```json
+{
+  "environment" : "environment.js",
+  "render"      : "render.js"
+}
+```
+
+###READ
+###EVALUATE
+###PRINT
+###REPEAT
+###...

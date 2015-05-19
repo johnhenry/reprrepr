@@ -32,7 +32,7 @@ var fs = require('fs');
 var settings;
 try{
   settings = JSON.parse(fs.readFileSync(process.cwd()+'/.reprrc',{encoding:'utf8'}));
-  if(settings.verbose || (argv.verbose && !settings.verbose) ) console.log('settings loaded from .reprrc');
+  if(settings.verbose || (argv.verbose && !settings.verbose) ) console.log('Settings loaded from .reprrc');
 }catch(error){
   settings = {};
 }
@@ -191,7 +191,7 @@ if(argv.host){
         .then(function(result){
           busy = false;
           if(argv.verbose){
-            console.log(language +'['+id+']>'+result[0]);
+            console.log(language +'['+id+']> '+result[0]);
             console.log(result[1]);
           };
           sockets.forEach(function(socket){
@@ -229,7 +229,7 @@ var readline = require('readline').createInterface({
   output: process.stdout,
   terminal: true
 });
-readline.setPrompt(argv.propmt || (language + '>') );
+readline.setPrompt(argv.propmt || (language + '> ') );
 readline.on('line', function(line){
   evaluate(line)
     .then(function(result){
