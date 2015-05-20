@@ -148,7 +148,6 @@ if(argv.languages){
   return;
 };
 
-
 var application = function(){
   //--host flag
   if(argv.host){
@@ -162,7 +161,10 @@ var application = function(){
     var busy;
     var socketFunction = function(socket){
       var id = hat(32,16);
-      socket.send('id: ' + id + (language? ', language: ' + language : ''));
+      var identity = {};
+      identity.id = id;
+      if(language) identity.language = language;
+      socket.send(JSON.stringify(identity));
       sockets.add(socket);
       if(argv.verbose) console.log('sockets connected: ' + sockets.size);
       socket.on('message', function(input){
