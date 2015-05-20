@@ -52,11 +52,6 @@ process.on('SIGINT', function () {
   process.exit(0);
 });
 
-//--help flag
-if(argv.help){
-  return console.log('help');
-};
-
 //Load renderer
 var render;
 try{
@@ -184,6 +179,7 @@ var application = function(){
         evaluate(input)
           .then(function(result){
             busy = false;
+            render(result[0], result[1]);
             if(argv.verbose){
               console.log(language +'['+id+']> '+result[0]);
               console.log(result[1]);
