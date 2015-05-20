@@ -23,7 +23,7 @@ A Javascript REPL with a customizable environment
   __reprrepr__ executes in an isolated environment with most top level objects stripped out. You may define your own custom environment using the __--set-environment__ flag (see below for more).
 
 ###Custom Rendering
-  __reprrepr__ needn't simply render to the console. Define your own custom render function with the __--set-render__ flag (see below for more).
+  __reprrepr__ needn't simply render to the console. Define your own custom render function with the __--set-renderer__ flag (see below for more).
 
 ###Custom Evaluation
   __reprrepr__ isn't limited to simply evaluating the built in languages. Define your own evaluator using the __--set-evaluator__ flag (see below for more).
@@ -48,6 +48,7 @@ repr --help
 ```bash
 repr
 ```
+Note: Quit using __Ctrl + c__
 
 ###Open a Lispyscript REPL
 ```bash
@@ -91,15 +92,15 @@ module.exports = {
 }
 ```
 
-###Open a REPL with specified render module
+###Open a REPL with specified renderer module
 ```bash
-repr --set-render render.js
+repr --set-renderer renderer.js
 ```
-The render module should export an object similar to the following:
+The renderer module should export a function similar to the following:
 
 ```js
-module.exports = function(inputHistory, outputHistory){
-  return outputHistory[outputHistory.length - 1];
+module.exports = function(input, output){
+  return output;
 };
 ```
 
@@ -136,7 +137,9 @@ repr --language es6 \
 --no-verbose \
 --file input.es6.js > output.js
 ```
-Note: render and environment modules must be written in Javascript, even if the REPL's language is set to something different
+Note: render and environment modules must be written in Javascript, even if the REPL's language is set to something different.
+
+BONUS!: You can use the __--file__ flag in conjunction with the __--language__ flag to convert a file from another languae into javascript.
 
 ##.reprrc
 You can define a __.reprrc__ file with pre-defined settings.
@@ -144,7 +147,7 @@ You can define a __.reprrc__ file with pre-defined settings.
 ```json
 {
   "verbose"     : true,
-  "render"      : "render.js",
+  "renderer"    : "renderer.js",
   "language"    : "lispyscript",
   "environment" : "environment.js",
   "evaluator"   : "evaluator.js",
@@ -155,14 +158,14 @@ Note: the __.reprrc__ is a json file.
 
 The following properties are available in the __.reprrc__ file:
 
-  - verbose -- similar to  __--verbose__ flag
-  - render -- similar to  __--set-render__ flag
-  - language -- similar to  __--language__ flag
+  - verbose     -- similar to  __--verbose__ flag
+  - renderer    -- similar to  __--set-renderet__ flag
+  - language    -- similar to  __--language__ flag
   - environment -- similar to  __--set-enviornmet__ flag
-  - evaluator -- similar to  __--set-evaluator__ flag
-  - host -- similar to  __--host__ flag
-  - eval -- similar to  __--eval__ flag
-  - execute -- code to execute before starting repl
+  - evaluator   -- similar to  __--set-evaluator__ flag
+  - host        -- similar to  __--host__ flag
+  - eval        -- similar to  __--eval__ flag
+  - execute     -- code to execute before starting repl
 
 ##Advanced Usage Examples
 
@@ -223,7 +226,7 @@ output(0);
 Note : Be careful when your repl leaks into its outer environment like this.
 It may lead to unintended side effects.
 
- - 5 - You could also set these in a __.reprrc__ file like so:
+ - 4 (alternative) - Alternatively, you can instead set these in a __.reprrc__ file like so:
 
 ####.npmrc
 

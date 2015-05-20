@@ -16,8 +16,8 @@ var argv = require('yargs')
 .alias('f', 'file')
 .describe('set-environment', 'set environment module')
 .example('$0 --set-environment environment.js ', 'set environment to environment.js')
-.describe('set-renderer', 'set render module')
-.example('$0 --set-render render.js', 'set render to render.js')
+.describe('set-renderer', 'set renderer module')
+.example('$0 --set-render renderer.js', 'set renderer to renderer.js')
 .describe('language', 'set language')
 .example('$0 --language lispyscript ', 'set language to lispyscript')
 .alias('l', 'language')
@@ -38,7 +38,7 @@ try{
 }
 
 argv['set-environment'] = settings['environment'] || argv['set-environment'];
-argv['set-render'] = settings['render'] || argv['set-render'];
+argv['set-renderer'] = settings['renderer'] || argv['set-renderer'];
 argv['set-evaluator'] = settings['evaluator'] || argv['set-evaluator'];
 argv['file'] = settings['file'] || argv['file'];
 argv['eval'] = settings['eval'] || argv['eval'];
@@ -55,8 +55,8 @@ process.on('SIGINT', function () {
 //Load renderer
 var render;
 try{
-  render = require(process.cwd() + '/' + argv['set-render']);
-  if(argv.verbose) console.log('Loaded local render module: ' + argv['set-render']);
+  render = require(process.cwd() + '/' + argv['set-renderer']);
+  if(argv.verbose) console.log('Loaded local renderer module: ' + argv['set-renderer']);
 }catch(error){
   if(argv.verbose) console.log('Using default render function');
   render = function(input, output){
@@ -69,7 +69,7 @@ var language;
 try{
   evalutate = require(process.cwd() + '/' + argv['set-evaluator']);
   language = '?';
-  if(argv.verbose) console.log('Loaded evaluator module: ' + argv['set-evaluator']);
+  if(argv.verbose) console.log('Loaded local evaluator module: ' + argv['set-evaluator']);
 }catch(e){
   if(argv.verbose) console.log('Using default evaluator');
   //Load environment

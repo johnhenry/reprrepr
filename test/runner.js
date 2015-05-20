@@ -1,4 +1,4 @@
-var render = require('./render');
+var render = require('./historyRenderer');
 var runner = function(testinputs, evaluate){
   var test = new Promise(function(resolve){resolve()});
   testinputs.forEach(function(input){
