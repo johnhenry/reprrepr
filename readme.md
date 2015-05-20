@@ -65,9 +65,16 @@ repr --languages
 repr --eval "1 + 1;"
 
 ```
-###Evaluate piped Lispyscript using an empty --eval flag
+
+###Evaluate code before starting a repl
 ```bash
-echo "(+ 1 1)" | repr --language lispyscript --eval
+repr --pre "var a = 1;"
+
+```
+
+###Evaluate piped code using an empty --eval flag
+```bash
+echo "1 + 1" | repr --eval
 ```
 
 ###Evaluate A Javascript file

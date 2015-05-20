@@ -11,6 +11,9 @@ var argv = require('yargs')
 .describe('eval', 'evalutate a give string')
 .example('$0 --eval \'1+1\' ', 'evaluate a given string')
 .alias('e', 'eval')
+.describe('pre', 'evalutate a give string before starting a repl')
+.example('$0 --pre \'var a = 1;\' ', 'evaluate a given string and start a repl')
+.alias('p', 'pre')
 .describe('file', 'evalutate a give file')
 .example('$0 --file foo.js ', 'evaluate a given file')
 .alias('f', 'file')
@@ -53,6 +56,7 @@ argv['eval'] = settings['eval'] || argv['eval'];
 argv['language'] = settings['language'] || argv['language'];
 argv['verbose'] = settings['verbose'] || argv['verbose'];
 argv['host'] = settings['host'] || argv['host'];
+argv['pre'] = settings['pre'] || argv['pre'];
 
 
 process.on('SIGINT', function () {
@@ -121,25 +125,7 @@ language = language === 'localeval' ? '' : language;
 if(argv.version){
   return console.log(_package.version);
 };
-//--eval flag
-if(argv.eval !== undefined){
-  if(argv.eval === true){
-    process.stdin.resume();
-    process.stdin.setEncoding('utf8');
-    return process.stdin.on('data', function(data){
-      return evaluate(data)
-        .then(function(result){
-          console.log(render(result[0], result[1]));
-        })
-    });
-  }else{
-    if(argv.verbose) console.log('Evaluating String: ' + argv.eval);
-    return evaluate(argv.eval)
-      .then(function(result){
-        console.log(render(result[0], result[1]));
-      })
-  }
-};
+
 //--file flag
 if(argv.file){
   if(argv.verbose) console.log('Evaluating File: ' + argv.file);
@@ -148,6 +134,7 @@ if(argv.file){
       console.log(render(result[0], result[1]));
     })
 };
+
 //--languages flag
 if(argv.languages){
   console.log('Languages');
@@ -241,8 +228,45 @@ var application = function(){
   });
   readline.prompt(true);
 }
-if(settings['execute']){
-  evaluate(settings['execute']).then(application);
+
+//--eval flag
+if(argv.eval !== undefined){
+  if(argv.eval === true){
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    return process.stdin.on('data', function(data){
+      return evaluate(data)
+        .then(function(result){
+          console.log(render(result[0], result[1]));
+        })
+    });
+  }else{
+    if(argv.verbose) console.log('Evaluating String: ' + argv.eval);
+    return evaluate(argv.eval)
+      .then(function(result){
+        console.log(render(result[0], result[1]));
+      })
+  }
+};
+
+//--pre flag
+if(argv.pre !== undefined){
+  if(argv.verbose) console.log('Running code...');
+  //TODO:I think this fails because stdin is resumed
+  // ###Evaluate piped into a repl using an empty --pre flag
+  // ```bash
+  // echo "var a = 1;" | repr --pre
+  // ```
+  // if(argv.pre === true){
+  //   process.stdin.resume();
+  //   process.stdin.setEncoding('utf8');
+  //   return process.stdin.on('data', function(data){
+  //     return evaluate(data).then(application);
+  //   });
+  // }else{
+  //   return evaluate(argv.pre).then(application);
+  // }
+  return evaluate(argv.pre).then(application);
 }else{
-  application();
-}
+  return application();
+};
