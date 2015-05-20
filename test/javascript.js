@@ -10,7 +10,7 @@ require('./runner')([
   'Math.PI',
   'Math.E'
 ],
-require('./evaluator')(
+require('./proxy')(
   require('localeval'),
   require('./environment')
 ));

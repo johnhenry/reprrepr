@@ -25,8 +25,8 @@ A Javascript REPL with a customizable environment
 ###Custom Rendering
   __reprrepr__ needn't simply render to the console. Define your own custom render function with the __--set-renderer__ flag (see below for more).
 
-###Custom Evaluation
-  __reprrepr__ isn't limited to simply evaluating the built in languages. Define your own evaluator using the __--set-evaluator__ flag (see below for more).
+###Proxied Evaluation
+  __reprrepr__ isn't limited to simply evaluating the built in languages, or even on your local machine. Proxy your input with the  __--set-proxy__ flag (see below for more).
 
 ###Web Socket REPL
   __reprrepr__ can host a repl using the __--host__ flag (see below for more).
@@ -48,7 +48,7 @@ repr --help
 ```bash
 repr
 ```
-Note: Quit using __Ctrl + c__
+Note: Quit using __Ctrl__ + __c__.
 
 ###Open a Lispyscript REPL
 ```bash
@@ -104,11 +104,11 @@ module.exports = function(input, output){
 };
 ```
 
-###Set the function used to evaluate
+###Proxy input through an external module
 ```bash
-repr --set-evaluator evaluator.js
+repr --set-proxy proxy.js
 ```
-The evaluator module should export a function similar to the following:
+The proxy module should export a function similar to the following:
 
 ```js
 module.exports = function(input){
@@ -117,9 +117,9 @@ module.exports = function(input){
 ```
 It should take an input and return a promise resolved an array of length 2;
   the first value must be the original input,
-  the second value must be the evaluated input.
+  the second value should be the evaluated input.
 
-Note: Setting the evaluator will override the language settings
+Note: Setting the proxy will override the language settings
 but not the renderer settings.
 
 ###Host a server at 127.0.0.1:8080
@@ -137,9 +137,9 @@ repr --language es6 \
 --no-verbose \
 --file input.es6.js > output.js
 ```
-Note: render and environment modules must be written in Javascript, even if the REPL's language is set to something different.
+Note: Render, environment, and proxy modules must be written in Javascript, even if the REPL's language is set to something different.
 
-BONUS!: You can use the __--file__ flag in conjunction with the __--language__ flag to convert a file from another languae into javascript.
+BONUS!: [Many languages can now be easily converted into javascript!](https://github.com/jashkenas/coffeescript/wiki/List-of-languages-that-compile-to-JS)
 
 ##.reprrc
 You can define a __.reprrc__ file with pre-defined settings.
@@ -150,11 +150,11 @@ You can define a __.reprrc__ file with pre-defined settings.
   "renderer"    : "renderer.js",
   "language"    : "lispyscript",
   "environment" : "environment.js",
-  "evaluator"   : "evaluator.js",
+  "proxy"       : "proxy.js",
   "host"        : 8080
 }
 ```
-Note: the __.reprrc__ is a json file.
+Note: The __.reprrc__ is a json file and __.reprrc.json__ can be used as well.
 
 The following properties are available in the __.reprrc__ file:
 
@@ -162,10 +162,10 @@ The following properties are available in the __.reprrc__ file:
   - renderer    -- similar to  __--set-renderet__ flag
   - language    -- similar to  __--language__ flag
   - environment -- similar to  __--set-enviornmet__ flag
-  - evaluator   -- similar to  __--set-evaluator__ flag
+  - proxy       -- similar to  __--set-proxy__ flag
   - host        -- similar to  __--host__ flag
   - eval        -- similar to  __--eval__ flag
-  - execute     -- code to execute before starting repl
+  - pre         -- similar to  __--pre__ flag
 
 ##Advanced Usage Examples
 

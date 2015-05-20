@@ -10,7 +10,7 @@ require('./runner')([
   '(.PI Math)',
   '(.E Math)'
 ],
-require('./evaluator')(
+require('./proxy')(
   require('../languages/lispyscript'),
   require('./environment')
 ));

@@ -17,7 +17,9 @@ var argv = require('yargs')
 .describe('set-environment', 'set environment module')
 .example('$0 --set-environment environment.js ', 'set environment to environment.js')
 .describe('set-renderer', 'set renderer module')
-.example('$0 --set-render renderer.js', 'set renderer to renderer.js')
+.example('$0 --set-renderer renderer.js', 'set renderer to renderer.js')
+.describe('set-proxy', 'set proxy module')
+.example('$0 --set-proxy proxy.js', 'set proxy to proxy.js')
 .describe('language', 'set language')
 .example('$0 --language lispyscript ', 'set language to lispyscript')
 .alias('l', 'language')
@@ -34,12 +36,18 @@ try{
   settings = JSON.parse(fs.readFileSync(process.cwd()+'/.reprrc',{encoding:'utf8'}));
   if(settings.verbose || (argv.verbose && !settings.verbose) ) console.log('Settings loaded from .reprrc');
 }catch(error){
-  settings = {};
+  try{
+    settings = JSON.parse(fs.readFileSync(process.cwd()+'/.reprrc.json',{encoding:'utf8'}));
+    if(settings.verbose || (argv.verbose && !settings.verbose) ) console.log('Settings loaded from .reprrc.json');
+
+  }catch(error){
+    settings = {};
+  }
 }
 
 argv['set-environment'] = settings['environment'] || argv['set-environment'];
 argv['set-renderer'] = settings['renderer'] || argv['set-renderer'];
-argv['set-evaluator'] = settings['evaluator'] || argv['set-evaluator'];
+argv['set-proxy'] = settings['proxy'] || argv['set-proxy'];
 argv['file'] = settings['file'] || argv['file'];
 argv['eval'] = settings['eval'] || argv['eval'];
 argv['language'] = settings['language'] || argv['language'];
@@ -67,9 +75,9 @@ try{
 var evaluate;
 var language;
 try{
-  evalutate = require(process.cwd() + '/' + argv['set-evaluator']);
+  evalutate = require(process.cwd() + '/' + argv['set-proxy']);
   language = '?';
-  if(argv.verbose) console.log('Loaded local evaluator module: ' + argv['set-evaluator']);
+  if(argv.verbose) console.log('Loaded local proxy evaluator module: ' + argv['set-proxy']);
 }catch(e){
   if(argv.verbose) console.log('Using default evaluator');
   //Load environment
