@@ -8,6 +8,9 @@ var argv = require('yargs')
 .describe('verbose', 'display verbose output')
 .boolean('verbose')
 .default('verbose', false)
+.describe('errors', 'display errors in output')
+.boolean('errors')
+.default('errors', false)
 .describe('eval', 'evalutate a give string')
 .example('$0 --eval \'1+1\' ', 'evaluate a given string')
 .alias('e', 'eval')
@@ -17,8 +20,8 @@ var argv = require('yargs')
 .describe('file', 'evalutate a give file')
 .example('$0 --file foo.js ', 'evaluate a given file')
 .alias('f', 'file')
-.describe('set-environment', 'set environment module')
-.example('$0 --set-environment environment.js ', 'set environment to environment.js')
+.describe('set-scope', 'set scope module')
+.example('$0 --set-scope scope.js ', 'set scope to scope.js')
 .describe('set-renderer', 'set renderer module')
 .example('$0 --set-renderer renderer.js', 'set renderer to renderer.js')
 .describe('set-proxy', 'set proxy module')
@@ -48,7 +51,7 @@ try{
   }
 }
 
-argv['set-environment'] = settings['environment'] || argv['set-environment'];
+argv['set-scope'] = settings['scope'] || argv['set-scope'];
 argv['set-renderer'] = settings['renderer'] || argv['set-renderer'];
 argv['set-proxy'] = settings['proxy'] || argv['set-proxy'];
 argv['file'] = settings['file'] || argv['file'];
@@ -70,12 +73,15 @@ try{
   render = require(process.cwd() + '/' + argv['set-renderer']);
   if(argv.verbose) console.log('Loaded local renderer module: ' + argv['set-renderer']);
 }catch(error){
-  if(argv.verbose) console.log('Using default render function');
+  if(argv.errors && argv['set-renderer']) {
+    console.log('Error loading renderer');
+    console.log(error);
+  };  if(argv.verbose) console.log('Using default render function');
   render = function(input, output){
     return output;
   };
 }
-//Load environment
+//Load scope
 var evaluate;
 var language;
 try{
@@ -83,16 +89,24 @@ try{
   language = '?';
   if(argv.verbose) console.log('Loaded local proxy evaluator module: ' + argv['set-proxy']);
 }catch(e){
+  if(argv.errors && argv['set-proxy']) {
+    console.log('Error loading proxy');
+    console.log(e);
+  };
   if(argv.verbose) console.log('Using default evaluator');
-  //Load environment
+  //Load scope
   language = argv.language;
-  var environment;
+  var scope;
   try{
-    environment = require(process.cwd() + '/' + argv['set-environment']);
-    if(argv.verbose) console.log('Loaded local environment module: ' + argv['set-environment']);
+    scope = require(process.cwd() + '/' + argv['set-scope']);
+    if(argv.verbose) console.log('Loaded local scope module: ' + argv['set-scope']);
   }catch(error){
-    if(argv.verbose) console.log('Using default empty environment');
-    environment = {};
+    if(argv.errors && argv['set-scope']) {
+      console.log('Error loading scope');
+      console.log(error);
+    };
+    if(argv.verbose) console.log('Using default empty scope');
+    scope = {};
   }
   //Create evaluate function
   var language = argv.language;
@@ -102,22 +116,22 @@ try{
     language = 'localeval';
   var evalfunc = require(evaluator);
   var evaluate = (
-    function(evalfunc, environment){
-      var e = function(input, evalfunc, environment){
+    function(evalfunc, scope){
+      var e = function(input, evalfunc, scope){
         var output;
         try{
-          output = evalfunc(input, environment);
+          output = evalfunc(input, scope);
         }catch(error){
           output = error.toString();
         }
         return Promise.resolve([input, output]);
       };
       return function(input){
-        return e(input, evalfunc, environment);
+        return e(input, evalfunc, scope);
       };
     })(
     evalfunc,
-    environment
+    scope
   );
 }
 language = language === 'localeval' ? '' : language;

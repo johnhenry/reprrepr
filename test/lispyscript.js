@@ -12,5 +12,5 @@ require('./runner')([
 ],
 require('./proxy')(
   require('../languages/lispyscript'),
-  require('./environment')
+  require('./scope')
 ));

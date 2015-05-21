@@ -1,15 +1,15 @@
-var evaluate = function(input, evalfunc, environment){
+var evaluate = function(input, evalfunc, scope){
   var output;
   try{
-    output = evalfunc(input, environment);
+    output = evalfunc(input, scope);
   }catch(error){
     output = error.toString();
   }
   return Promise.resolve([input, output]);
 };
 
-module.exports = function(evalfunc, environment){
+module.exports = function(evalfunc, scope){
   return function(input){
-    return evaluate(input, evalfunc || eval, environment || {});
+    return evaluate(input, evalfunc || eval, scope || {});
   };
 }

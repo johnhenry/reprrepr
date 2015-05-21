@@ -9,7 +9,7 @@
 
 #Read Evaluate Print Repeat
 
-A Javascript REPL with a customizable environment
+A Javascript REPL with a customizable scope
 
 ##Features
 
@@ -19,8 +19,8 @@ A Javascript REPL with a customizable environment
   - [Lisypscript](http://lispyscript.com/)
   - [ECMASscript 6 (via babel.js)](https://babeljs.io/)
 
-###Isolated Environment
-  __reprrepr__ executes in an isolated environment with most top level objects stripped out. You may define your own custom environment using the __--set-environment__ flag (see below for more).
+###Isolated Scope
+  __reprrepr__ executes in an isolated scope with most top level objects stripped out. You may define your own custom scope using the __--set-scope__ flag (see below for more).
 
 ###Custom Rendering
   __reprrepr__ needn't simply render to the console. Define your own custom render function with the __--set-renderer__ flag (see below for more).
@@ -87,11 +87,11 @@ repr --file javascript.js
 repr --file --language lispyscript lispyscript.lsjs
 ```
 
-###Open a REPL with specified environment module
+###Open a REPL with specified scope module
 ```bash
-repr --set-environment environment.js
+repr --set-scope scope.js
 ```
-The environment module should export an object similar to the following:
+The scope module should export an object similar to the following:
 
 ```js
 module.exports = {
@@ -140,11 +140,12 @@ Output will be distributed to all connected parties.
 ###Flags can be mixed and matched (where it makes sense)
 ```bash
 repr --language es6 \
---set-environment environment.js\
---no-verbose \
+--set-scope scope.js\
+--verbose \
+--errors \
 --file input.es6.js > output.js
 ```
-Note: Render, environment, and proxy modules must be written in Javascript, even if the REPL's language is set to something different.
+Note: Renderer, scope, and proxy modules must be written in Javascript, even if the REPL's language is set to something different.
 
 BONUS!: [Many languages can now be easily converted into javascript!](https://github.com/jashkenas/coffeescript/wiki/List-of-languages-that-compile-to-JS)
 
@@ -156,7 +157,7 @@ You can define a __.reprrc__ file with pre-defined settings.
   "verbose"     : true,
   "renderer"    : "renderer.js",
   "language"    : "lispyscript",
-  "environment" : "environment.js",
+  "scope" : "scope.js",
   "proxy"       : "proxy.js",
   "host"        : 8080
 }
@@ -165,10 +166,11 @@ Note: The __.reprrc__ is a json file and __.reprrc.json__ can be used as well.
 
 The following properties are available in the __.reprrc__ file:
 
-  - verbose     -- similar to  __--verbose__ flag
+  - verbose     -- show verbose console output
+  - errors      -- show errors in console output
   - renderer    -- similar to  __--set-renderet__ flag
   - language    -- similar to  __--language__ flag
-  - environment -- similar to  __--set-enviornmet__ flag
+  - scope -- similar to  __--set-enviornmet__ flag
   - proxy       -- similar to  __--set-proxy__ flag
   - host        -- similar to  __--host__ flag
   - eval        -- similar to  __--eval__ flag
@@ -199,13 +201,13 @@ var render = function(input, output){
 module.exports = render;
 ```
 
- - 3 - Create an environment with functions to access history
+ - 3 - Create an scope with functions to access history
 
-####environment.js
+####scope.js
 
 ```javascript
 var history = require('./history');
-var environment = {
+var scope = {
   input:function(index){
     return history[2 * index];
   },
@@ -218,7 +220,7 @@ var environment = {
  - 4 - Run with custom Flags
 
 ```
-repl --set-environment environment.js --set-render render.js
+repl --set-scope scope.js --set-render render.js
 > 1 + 1
 2
 > 3 + 2
@@ -230,7 +232,7 @@ repl --set-environment environment.js --set-render render.js
 > history[4]
 output(0);
 ```
-Note : Be careful when your repl leaks into its outer environment like this.
+Note : Be careful when your repl leaks into its outer scope like this.
 It may lead to unintended side effects.
 
  - 4 (alternative) - Alternatively, you can instead set these in a __.reprrc__ file like so:
@@ -239,7 +241,7 @@ It may lead to unintended side effects.
 
 ```json
 {
-  "environment" : "environment.js",
+  "scope" : "scope.js",
   "render"      : "render.js"
 }
 ```

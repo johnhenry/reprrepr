@@ -12,5 +12,5 @@ require('./runner')([
 ],
 require('./proxy')(
   require('localeval'),
-  require('./environment')
+  require('./scope')
 ));
